@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Danh sách phim</title>
+
+<link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+<link href="css/sb-admin-2.min.css" rel="stylesheet">
+
+</head>
+
+<body id="page-top">
+
+<div id="wrapper">
+
+    <!-- ===== SIDEBAR FULL ===== -->
+    <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+
+        <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index.html">
+            <div class="sidebar-brand-text mx-3"> Movie Admin</div>
+        </a>
+
+        <hr class="sidebar-divider my-0">
+
+        <li class="nav-item">
+            <a class="nav-link" href="index.html">
+                <i class="fas fa-home"></i>
+                <span>Tổng quan</span>
+            </a>
+        </li>
+
+        <li class="nav-item active">
+            <a class="nav-link" href="movies.html">
+                <i class="fas fa-film"></i>
+                <span>Danh sách phim</span>
+            </a>
+        </li>
+
+      <li class="nav-item">
+    <a class="nav-link" href="add-movie.html">
+        <i class="fas fa-plus"></i>
+        <span>Thêm phim</span>
+    </a>
+</li>
+
+<li class="nav-item">
+    <a class="nav-link" href="schedule.html">
+        <i class="fas fa-calendar"></i>
+        <span>Lịch chiếu</span>
+    </a>
+</li>
+
+
+<li class="nav-item">
+    <a class="nav-link" href="tickets.html">
+        <i class="fas fa-ticket-alt"></i>
+        <span>Quản lý vé</span>
+    </a>
+</li>
+
+<li class="nav-item">
+    <a class="nav-link" href="users.html">
+        <i class="fas fa-users"></i>
+        <span>Người dùng</span>
+    </a>
+</li>
+        <hr class="sidebar-divider">
+
+        <div class="sidebar-heading">Hệ thống</div>
+
+        <li class="nav-item">
+            <a class="nav-link" href="login.html">
+                <i class="fas fa-sign-in-alt"></i>
+                <span>Đăng nhập</span>
+            </a>
+        </li>
+
+    </ul>
+
+    <!-- ===== CONTENT ===== -->
+    <div id="content-wrapper" class="d-flex flex-column">
+
+        <div id="content">
+
+            <!-- ===== TOPBAR FULL ===== -->
+            <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 shadow">
+
+                <button id="sidebarToggleTop" class="btn btn-link d-md-none">
+                    <i class="fa fa-bars"></i>
+                </button>
+
+                <form class="d-none d-sm-inline-block form-inline mr-auto ml-md-3">
+                    <input type="text" class="form-control bg-light border-0 small" placeholder="Tìm phim...">
+                </form>
+
+                <ul class="navbar-nav ml-auto">
+
+                    <li class="nav-item dropdown no-arrow mx-1">
+                        <a class="nav-link" href="#">
+                            <i class="fas fa-bell fa-fw"></i>
+                        </a>
+                    </li>
+
+                    <li class="nav-item dropdown no-arrow mx-1">
+                        <a class="nav-link" href="#">
+                            <i class="fas fa-envelope fa-fw"></i>
+                        </a>
+                    </li>
+
+                    <div class="topbar-divider d-none d-sm-block"></div>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <span class="mr-2 text-gray-600 small">Admin</span>
+                            <img class="img-profile rounded-circle" src="img/undraw_profile.svg">
+                        </a>
+                    </li>
+
+                </ul>
+
+            </nav>
+
+            <!-- ===== MAIN ===== -->
+            <div class="container-fluid">
+
+                <div class="card shadow mb-4">
+
+                    <div class="card-header bg-primary text-white d-flex justify-content-between">
+                        <h6 class="m-0 font-weight-bold"> Danh sách phim</h6>
+                       <a href="add-movie.html" class="btn btn-light btn-sm">+ Thêm phim</a>
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="table-responsive">
+                            <table class="table table-bordered text-center">
+
+                                <thead class="bg-primary text-white">
+                                    <tr>
+                                        <th>Poster</th>
+                                        <th>Tên phim</th>
+                                        <th>Năm</th>
+                                        <th>Thể loại</th>
+                                        <th>Lịch chiếu</th>
+                                        <th>Trạng thái</th>
+                                        <th>Hành động</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody id="movieTable">
+
+    <!-- 🔥 PHIM CỐ ĐỊNH -->
+    <tr>
+        <td>
+            <img src="https://image.tmdb.org/t/p/w200/qJ2tW6WMUDux911r6m7haRef0WH.jpg" width="50">
+        </td>
+        <td>Avengers: Endgame</td>
+        <td>2019</td>
+        <td>Hành động</td>
+        <td>17-05</td>
+        <td><span class="badge badge-success">Công khai</span></td>
+        <td>
+           <td>
+    <span class="text-muted">Chỉ xem</span>
+</td>
+    </tr>
+
+    <tr>
+        <td>
+            <img src="https://image.tmdb.org/t/p/w200/8WUVHemHFH2ZIP6NWkwlHWsyrEL.jpg" width="50">
+        </td>
+        <td>Spider-Man</td>
+        <td>2021</td>
+        <td>Hài</td>
+        <td>20-04</td>
+        <td><span class="badge badge-success">Công khai</span></td>
+        <td>
+           <td>
+    <span class="text-muted">Chỉ xem</span>
+</td>
+        </td>
+    </tr>
+
+</tbody>
+                            </table>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- JS (QUAN TRỌNG) -->
+<script src="vendor/jquery/jquery.min.js"></script>
+<script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="js/sb-admin-2.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyB-tw2lNCrv2AXA5mUP4bkp9vzDpLzXqe4",
+  authDomain: "movie-booking-87997.firebaseapp.com",
+  databaseURL: "https://movie-booking-87997-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "movie-booking-87997",
+  storageBucket: "movie-booking-87997.firebasestorage.app",
+  messagingSenderId: "490389622658",
+  appId: "1:490389622658:web:6f9da85f9330207e34099b"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+let isAdmin = false;
+
+// check role
+firebase.auth().onAuthStateChanged(user => {
+    if(user){
+        db.ref("users/" + user.uid).once("value").then(snap => {
+            let data = snap.val();
+            if(data && data.role === "Admin"){
+                isAdmin = true;
+            }
+            loadMovies(); // 🔥 load sau khi biết role
+        });
+    } else {
+        loadMovies();
+    }
+});
+// LOAD DATA
+function loadMovies(){
+    db.ref("movies").on("value", snapshot=>{
+        let data = snapshot.val();
+        let html = "";
+
+        if(data){
+            for(let id in data){
+                let m = data[id];
+
+                html += `
+                <tr>
+                    <td><img src="${m.image || 'https://via.placeholder.com/50'}" width="50"></td>
+                    <td>${m.name}</td>
+                    <td>${m.year || '-'}</td>
+                    <td>${m.genre}</td>
+                    <td>${m.time || '-'}</td>
+                    <td><span class="badge badge-success">Công khai</span></td>
+                    <td>
+    ${isAdmin ? `
+        <button class="btn btn-warning btn-sm" onclick="editMovie('${id}','${m.name}','${m.genre}')">Sửa</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteMovie('${id}')">Xoá</button>
+    ` : '<span class="text-muted">Chỉ xem</span>'}
+</td>
+                </tr>
+                `;
+            }
+        }
+        //  chỉ replace phần firebase (không đụng phim cứng)
+       document.getElementById("movieTable").innerHTML = html;
+    });
+}
+
+// DELETE
+function deleteMovie(id){
+    db.ref("movies/" + id).remove();
+}
+
+// LOAD
+
+function editMovie(id, oldName, oldGenre){
+    let name = prompt("Tên phim:", oldName);
+    let genre = prompt("Thể loại:", oldGenre);
+
+    if(name && genre){
+        db.ref("movies/" + id).update({
+            name: name,
+            genre: genre
+        });
+    }
+}
+
+</script>
+</body>
+</html>

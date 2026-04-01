@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard Doanh Thu</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+<style>
+body{  
+    margin:0;
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg,#0f172a,#1e293b);
+    color:white;
+}
+
+.header{
+    padding:20px;
+    text-align:center;
+    font-size:24px;
+    font-weight:bold;
+}
+
+.back-btn{
+    margin-left:20px;
+    background:#facc15;
+    border:none;
+    padding:10px 20px;
+    border-radius:8px;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+.container{
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px,1fr));
+    gap:20px;
+    padding:20px;
+}
+
+.card{
+    background: rgba(255,255,255,0.05);
+    padding:20px;
+    border-radius:15px;
+    text-align:center;
+}
+
+.chart-box{
+    margin:20px;
+    padding:20px;
+    background: rgba(255,255,255,0.05);
+    border-radius:15px;
+}
+
+.table{
+    margin:20px;
+    background: rgba(255,255,255,0.05);
+    border-radius:15px;
+    overflow:hidden;
+}
+
+.table table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+.table th, .table td{
+    padding:12px;
+    text-align:center;
+}
+
+.table th{
+    background:#1e293b;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">📊 Dashboard Doanh Thu Rạp Phim</div>
+
+<button class="back-btn" onclick="goBack()">⬅️ Trở về</button>
+
+<div class="container">
+    <div class="card">
+        <h3>Tổng vé</h3>
+        <h2 id="totalTickets">0</h2>
+    </div>
+
+    <div class="card">
+        <h3>Doanh thu</h3>
+        <h2 id="totalMoney">0đ</h2>
+    </div>
+
+    <div class="card">
+        <h3>Phim hot</h3>
+        <h2 id="topMovie">--</h2>
+    </div>
+</div>
+
+<div class="chart-box">
+    <canvas id="chart"></canvas>
+</div>
+
+<div class="table">
+    <table>
+        <thead>
+            <tr>
+                <th>Phim</th>
+                <th>Vé</th>
+                <th>Doanh thu</th>
+            </tr>
+        </thead>
+        <tbody id="tableData"></tbody>
+    </table>
+</div>
+
+<script>
+// 🔥 FIREBASE CONFIG
+const firebaseConfig = {
+  apiKey: "AIzaSyB-tw2lNCrv2AXA5mUP4bkp9vzDpLzXqe4",
+  authDomain: "movie-booking-87997.firebaseapp.com",
+  databaseURL: "https://movie-booking-87997-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "movie-booking-87997"
+};
+
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
+const db = firebase.database();
+
+// 🔒 CHECK LOGIN
+firebase.auth().onAuthStateChanged(user => {
+    if(!user){
+        alert("Chưa đăng nhập!");
+        window.location.href = "login.html";
+    } else {
+        loadStats(); // 🔥 CHỈ LOAD SAU KHI LOGIN
+    }
+});
+
+let chart;
+
+// LOAD DATA
+function loadStats(){
+    db.ref("tickets").on("value", snapshot => {
+
+        let data = snapshot.val();
+
+        let totalTickets = 0;
+        let totalMoney = 0;
+        let movieMap = {};
+
+        // ===== GOM DATA =====
+        if(data){
+            for(let id in data){
+                let t = data[id];
+
+                let price = Number(t.price) || 0;
+                let movie = t.movie || "Không rõ";
+
+                totalTickets++;
+                totalMoney += price;
+
+                if(!movieMap[movie]){
+                    movieMap[movie] = { tickets: 0, revenue: 0 };
+                }
+
+                movieMap[movie].tickets++;
+                movieMap[movie].revenue += price;
+            }
+        }
+
+        // ===== SORT THEO DOANH THU =====
+        let sortedMovies = Object.entries(movieMap)
+            .sort((a, b) => b[1].revenue - a[1].revenue);
+
+        // ===== TOP MOVIE =====
+        let topMovie = sortedMovies.length > 0 ? sortedMovies[0][0] : "--";
+
+        // ===== BUILD UI =====
+        let labels = [];
+        let chartData = [];
+        let tableHTML = "";
+
+        sortedMovies.forEach((item, index) => {
+            let movie = item[0];
+            let m = item[1];
+
+            labels.push(movie);
+            chartData.push(m.tickets);
+
+            tableHTML += `
+                <tr>
+                    <td>${index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : ""} ${movie}</td>
+                    <td>${m.tickets}</td>
+                    <td>${m.revenue.toLocaleString()}đ</td>
+                </tr>
+            `;
+        });
+
+        // ===== RENDER =====
+        document.getElementById("totalTickets").innerText = totalTickets;
+        document.getElementById("totalMoney").innerText = totalMoney.toLocaleString() + "đ";
+        document.getElementById("topMovie").innerText = topMovie;
+        document.getElementById("tableData").innerHTML = tableHTML;
+
+        // ===== CHART =====
+        if(chart) chart.destroy();
+
+        chart = new Chart(document.getElementById("chart"), {
+            type: "bar",
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: "Số vé bán",
+                    data: chartData
+                }]
+            }
+        });
+
+    });
+}
+
+
+// quay lại
+function goBack(){
+    window.location.href = "index.html";
+}
+</script>
+
+</body>
+</html>

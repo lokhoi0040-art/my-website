@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Quản lý vé</title>
+
+<link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+<link href="css/sb-admin-2.min.css" rel="stylesheet">
+</head>
+
+<body id="page-top">
+<div id="wrapper">
+
+<!-- SIDEBAR -->
+<ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion">
+
+<a class="sidebar-brand d-flex align-items-center justify-content-center" href="index.html">
+    <div class="sidebar-brand-text mx-3"> Movie Admin</div>
+</a>
+
+<hr class="sidebar-divider">
+
+<li class="nav-item"><a class="nav-link" href="index.html"><i class="fas fa-home"></i> Trang chủ</a></li>
+<li class="nav-item"><a class="nav-link" href="movies.html"><i class="fas fa-film"></i> Danh sách phim</a></li>
+<li class="nav-item"><a class="nav-link" href="add-movie.html"><i class="fas fa-plus"></i> Thêm phim</a></li>
+<li class="nav-item"><a class="nav-link" href="schedule.html"><i class="fas fa-calendar"></i> Lịch chiếu</a></li>
+
+<li class="nav-item active">
+    <a class="nav-link" href="#"><i class="fas fa-ticket-alt"></i> Quản lý vé</a>
+</li>
+
+<li class="nav-item"><a class="nav-link" href="users.html"><i class="fas fa-users"></i> Người dùng</a></li>
+
+</li>
+</ul>
+
+<!-- CONTENT -->
+<div id="content-wrapper" class="d-flex flex-column">
+<div id="content">
+
+<nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 shadow">
+    <h5 class="ml-3"> Quản lý vé</h5>
+</nav>
+
+<div class="container-fluid">
+
+<div class="card shadow">
+<div class="card-header bg-primary text-white">
+Danh sách vé đã đặt
+</div>
+
+<div class="card-body">
+
+<table class="table table-bordered text-center">
+<thead class="bg-primary text-white">
+<tr>
+<th>Khách</th>
+<th>Phim</th>
+<th>Ghế</th>
+<th>Giá</th>
+<th>Trạng thái</th>
+<th>Hành động</th>
+</tr>
+</thead>
+
+<tbody id="ticketList"></tbody>
+</table>
+
+</div>
+</div>
+
+</div>
+</div>
+</div>
+
+</div>
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+<script>
+// ===== CONFIG =====
+const firebaseConfig = {
+  apiKey: "AIzaSyB-tw2lNCrv2AXA5mUP4bkp9vzDpLzXqe4",
+  authDomain: "movie-booking-87997.firebaseapp.com",
+  databaseURL: "https://movie-booking-87997-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "movie-booking-87997",
+  storageBucket: "movie-booking-87997.firebasestorage.app",
+  messagingSenderId: "490389622658",
+  appId: "1:490389622658:web:6f9da85f9330207e34099b"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// ===== LOAD DATA =====
+function loadTickets(){
+    db.ref("tickets").on("value", snapshot=>{
+        let data = snapshot.val();
+        let html = "";
+        console.log("DATA:", data);
+        if(data){
+            for(let id in data){
+                let t = data[id];
+
+                let badge = "secondary";
+                if(t.status === "Chờ xác nhận") badge = "warning";
+                if(t.status === "Đã thanh toán") badge = "success";
+                if(t.status === "Đã check-in") badge = "primary";
+
+                html += `
+                <tr>
+                    <td>${t.userName || t.user}</td>
+                    <td>${t.movie}</td>
+                    <td>${t.seat}</td>
+                   <td>${(t.price || 0).toLocaleString()}đ</td>
+                    <td>
+                        <span class="badge badge-${badge}">
+                            ${t.status}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn btn-success btn-sm"
+                            onclick="confirmTicket('${id}')">
+                            ✔ Xác nhận
+                        </button>
+
+                        <button class="btn btn-info btn-sm"
+                            onclick="checkIn('${id}')">
+                            🎫 Check-in
+                        </button>
+
+                        <button class="btn btn-danger btn-sm"
+                            onclick="deleteTicket('${id}')">
+                            🗑 Xoá
+                        </button>
+                    </td>
+                </tr>
+                `;
+            }
+        }
+
+        document.getElementById("ticketList").innerHTML = html;
+    });
+}
+
+// ===== THÊM VÉ =====
+function addTicket(user, movie, seat, price){
+    db.ref("tickets").push({
+        user: user,
+        movie: movie,
+        seat: seat,
+        price: price,
+        status: "Chờ xác nhận"
+    });
+}
+
+// ===== XÁC NHẬN =====
+function confirmTicket(id){
+    db.ref("tickets/" + id).update({
+        status: "Đã thanh toán"
+    });
+}
+
+// ===== CHECK-IN =====
+function checkIn(id){
+    db.ref("tickets/" + id).once("value", snap=>{
+        let t = snap.val();
+
+        if(t.status !== "Đã thanh toán"){
+            alert("Phải thanh toán trước!");
+            return;
+        }
+
+        db.ref("tickets/" + id).update({
+            status: "Đã check-in"
+        });
+    });
+}
+
+// ===== XOÁ =====
+function deleteTicket(id){
+    if(confirm("Xoá vé này?")){
+        db.ref("tickets/" + id).remove();
+    }
+}
+
+// ===== INIT =====
+
+firebase.auth().onAuthStateChanged(function(user) {
+    if (!user) {
+        alert("Phải đăng nhập!");
+        window.location.href = "login.html";
+    } else {
+        db.ref("users/" + user.uid).once("value").then(snap => {
+            let data = snap.val();
+
+            if(data?.role !== "Admin"){
+                alert("Không có quyền!");
+                window.location.href = "index.html";
+            } else {
+                loadTickets();
+            }
+        });
+    }
+});
+firebase.auth().onAuthStateChanged(user=>{
+    if(user){
+        console.log("UID:", user.uid);
+    }
+});
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Thêm phim</title>
+
+<link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+<link href="css/sb-admin-2.min.css" rel="stylesheet">
+
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+<style>
+.preview-img{
+    width:120px;
+    height:160px;
+    object-fit:cover;
+    border-radius:8px;
+    border:2px dashed #ccc;
+}
+</style>
+</head>
+
+<body id="page-top">
+
+<div id="wrapper">
+
+<!-- SIDEBAR -->
+<ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion">
+
+    <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index.html">
+        <div class="sidebar-brand-text mx-3"> Movie Admin</div>
+    </a>
+
+    <hr class="sidebar-divider">
+
+    <li class="nav-item">
+        <a class="nav-link" href="index.html">
+            <i class="fas fa-home"></i>
+            <span>Tổng quan</span>
+        </a>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link" href="movies.html">
+            <i class="fas fa-film"></i>
+            <span>Danh sách phim</span>
+        </a>
+    </li>
+
+    <li class="nav-item">
+    <a class="nav-link" href="add-movie.html">
+        <i class="fas fa-plus"></i>
+        <span>Thêm phim</span>
+    </a>
+</li>
+
+<li class="nav-item">
+    <a class="nav-link" href="schedule.html">
+        <i class="fas fa-calendar"></i>
+        <span>Lịch chiếu</span>
+    </a>
+</li>
+
+
+<li class="nav-item">
+    <a class="nav-link" href="tickets.html">
+        <i class="fas fa-ticket-alt"></i>
+        <span>Quản lý vé</span>
+    </a>
+</li>
+
+<li class="nav-item">
+    <a class="nav-link" href="users.html">
+        <i class="fas fa-users"></i>
+        <span>Người dùng</span>
+    </a>
+</li>
+
+</ul>
+
+<!-- CONTENT -->
+<div id="content-wrapper" class="d-flex flex-column">
+<div id="content">
+
+<nav class="navbar navbar-light bg-white shadow mb-4">
+    <h5 class="ml-3">➕ Thêm phim mới</h5>
+</nav>
+
+<div class="container-fluid">
+
+<div class="card shadow">
+<div class="card-header bg-primary text-white">
+    Nhập thông tin phim
+</div>
+
+<div class="card-body">
+
+<div class="row">
+
+<!-- LEFT -->
+<div class="col-md-8">
+
+<div class="form-group">
+<label>Tên phim</label>
+<input id="name" class="form-control">
+</div>
+
+
+<div class="form-row">
+<div class="form-group col-md-4">
+<label>Năm</label>
+<input id="year" type="number" class="form-control">
+</div>
+</div>
+<div class="form-group col-md-4">
+<label>Thể loại</label>
+<select id="type" class="form-control">
+<option>Hành động</option>
+<option>Tình cảm</option>
+<option>Hài</option>
+<option>Kinh dị</option>
+</select>
+</div>
+</div>
+<div class="form-group col-md-4">
+<label>Thời lượng (phút)</label>
+<input id="duration" type="number" class="form-control" placeholder="VD: 120">
+</div>
+</div>
+
+<div class="form-group">
+<label>Diễn viên</label>
+<input id="actor" class="form-control">
+</div>
+
+<div class="form-group">
+<label>Mô tả</label>
+<textarea id="desc" class="form-control"></textarea>
+</div>
+
+<button class="btn btn-success" onclick="addMovie()">
+➕ Thêm phim
+</button>
+
+<a href="movies.html" class="btn btn-secondary">
+⬅ Quay lại
+</a>
+
+</div>
+
+<!-- RIGHT -->
+<div class="col-md-4 text-center">
+
+<p><b>Ảnh preview</b></p>
+
+<img id="preview"
+     class="preview-img mb-2"
+     src="https://via.placeholder.com/120x160">
+
+<input type="text" id="img"
+       class="form-control"
+       placeholder="Link ảnh"
+       oninput="previewImg()">
+
+</div>
+
+</div>
+
+<hr>
+
+<h5> Phim đã lưu</h5>
+<div id="movieList"></div>
+
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+</div>
+
+<!-- JS -->
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyB-tw2lNCrv2AXA5mUP4bkp9vzDpLzXqe4",
+  authDomain: "movie-booking-87997.firebaseapp.com",
+  databaseURL: "https://movie-booking-87997-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "movie-booking-87997"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+let isAdmin = false;
+
+// 🔥 CHECK LOGIN + ROLE
+firebase.auth().onAuthStateChanged(user => {
+    if(user){
+        db.ref("users/" + user.uid).once("value").then(snap => {
+            let data = snap.val();
+
+            if(data && data.role === "Admin"){
+                isAdmin = true;
+            }
+
+            console.log("isAdmin =", isAdmin); // debug
+
+            loadMovies(); // luôn load
+        });
+    } else {
+        alert("Chưa đăng nhập!");
+        window.location.href = "login.html";
+    }
+});
+
+// PREVIEW
+function previewImg(){
+    let url = document.getElementById("img").value;
+    document.getElementById("preview").src = url || "https://via.placeholder.com/120x160";
+}
+
+// ADD
+function addMovie(){
+
+    if(!isAdmin){
+        alert("Bạn không có quyền!");
+        return;
+    }
+
+    let name = document.getElementById("name").value;
+    let year = document.getElementById("year").value;
+    let type = document.getElementById("type").value;
+    let actor = document.getElementById("actor").value;
+    let desc = document.getElementById("desc").value;
+    let img = document.getElementById("img").value;
+
+    if(!name || !year){
+        alert("Nhập thiếu 😅");
+        return;
+    }
+
+    db.ref("movies").push({
+        name,
+        year,
+        genre: type,
+        actor,
+        desc,
+        image: img
+    })
+    .then(()=> alert("Đã thêm phim 🎬"));
+}
+
+// LOAD
+function loadMovies(){
+    db.ref("movies").on("value", snapshot=>{
+        let data = snapshot.val();
+        let html = "";
+
+        if(data){
+            for(let id in data){
+                let m = data[id];
+
+                html += `
+                <div class="d-flex align-items-center bg-white p-2 mb-2 shadow-sm rounded">
+                    <img src="${m.image || 'https://via.placeholder.com/60'}"
+                         style="width:60px;height:80px;object-fit:cover;border-radius:6px;">
+
+                    <div class="ml-3">
+                        <b>${m.name}</b> (${m.year})<br>
+                        <small>${m.genre} | ${m.actor}</small>
+                    </div>
+
+                    <div class="ml-auto">
+                        ${
+                            isAdmin
+                            ? `<button class="btn btn-danger btn-sm"
+                                onclick="deleteMovie('${id}')">Xoá</button>`
+                            : `<span class="text-muted">Chỉ xem</span>`
+                        }
+                    </div>
+                </div>
+                `;
+            }
+        }
+
+        document.getElementById("movieList").innerHTML = html;
+    });
+}
+
+// DELETE
+function deleteMovie(id){
+
+    if(!isAdmin){
+        alert("Bạn không có quyền!");
+        return;
+    }
+
+    if(confirm("Xoá phim này?")){
+        db.ref("movies/" + id).remove();
+    }
+}
+</script>
+
+<script src="vendor/jquery/jquery.min.js"></script>
+<script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="js/sb-admin-2.min.js"></script>
+
+</body>
+</html>
