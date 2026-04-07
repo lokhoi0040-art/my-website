@@ -209,11 +209,13 @@ firebase.auth().onAuthStateChanged(user => {
 });
 // ===== BIẾN =====
 let selected = [];
-let bookedSeats = {}; // 🔥 LUÔN LÀ OBJECT
+let bookedSeats = {}; 
 let today = new Date().toISOString().split("T")[0];
+let seatRef = null; 
 // ===== LẤY PARAM =====
 const params = new URLSearchParams(window.location.search);
-const movie = params.get("movie") || "Đặt vé";
+const movieRaw = params.get("movie") || "Đặt vé";
+const movie = decodeURIComponent(movieRaw).trim(); // 🔥 FIX FULL
 let time = params.get("time") || "09:00";
 
 // HIỂN THỊ
@@ -222,34 +224,6 @@ function updateTitle(){
     document.getElementById("movieName2").innerText = movie + " (" + time + ")";
 }
 
-// ===== LOAD GHẾ =====
-function loadSeats(){
-
-    let ref = db.ref("seats/" + movie + "/" + today + "/" + time);
-    ref.off(); // tránh load trùng
-
-    ref.on("value", snapshot => {
-
-        let data = snapshot.val();
-
-        // 🔥 CHỐNG NULL + CHUẨN HOÁ DATA
-        if(!data){
-            bookedSeats = {};
-        }else if(Array.isArray(data)){
-            // nếu lỡ lưu array → convert sang object
-            bookedSeats = {};
-            data.forEach(i => bookedSeats[i] = true);
-        }else{
-            bookedSeats = data;
-        }
-
-        console.log("DATA:", bookedSeats); // debug
-
-        render();
-    });
-}
-
-// ===== RENDER GHẾ =====
 function render(){
     const box = document.getElementById("seatContainer");
     box.innerHTML = "";
@@ -260,8 +234,7 @@ function render(){
         div.className = "seat";
 
         let vip = (i % 5 === 0);
-        let booked = bookedSeats[i]; // 🔥 KEY CHUẨN
-
+        let booked = bookedSeats[i] || bookedSeats[i.toString()];
         if(booked){
             div.classList.add("booked");
         }else if(selected.includes(i)){
@@ -301,111 +274,46 @@ function updateTotal(){
     document.getElementById("seatList").innerText = selected.join(", ") || "Chưa chọn";
 }
 
-// ===== BOOK GHẾ (ANTI TRÙNG) =====
-function book(){
+function loadSeats(){
 
-    if(selected.length === 0){
-        alert("Chọn ghế đi 😅");
-        return;
+    let safeMovie = movie.replace(/[.#$/[\]]/g, "_");
+    const currentTime = document.getElementById("timeSelect").value;
+
+    // 🔥 TẮT LISTENER CŨ
+    if(seatRef){
+        seatRef.off();
     }
 
-    if(!currentUser){
-        alert("Bạn chưa đăng nhập!");
-        return;
-    }
+    // 🔥 GÁN REF MỚI
+    seatRef = db.ref("seats/" + safeMovie + "/" + today + "/" + currentTime);
 
-    let username = document.getElementById("username").value;
-    let payment = document.getElementById("payment").value;
+    seatRef.on("value", snapshot => {
 
-    if(!username){
-        alert("Nhập tên!");
-        return;
-    }
+        let data = snapshot.val();
 
-    let ref = db.ref(`seats/${movie}/${today}/${time}`);
-    let conflict = false;
-
-    ref.transaction(currentData => {
-
-        currentData = currentData || {};
-
-        for(let seat of selected){
-            if(currentData[seat]){
-                conflict = true;
-                return;
-            }
+        if(!data){
+            bookedSeats = {};
+        }else if(Array.isArray(data)){
+            bookedSeats = {};
+            data.forEach(i => bookedSeats[i] = true);
+        }else{
+            bookedSeats = data;
         }
 
-        selected.forEach(seat=>{
-            currentData[seat] = true;
-        });
+        selected = selected.filter(seat => !bookedSeats[seat] && !bookedSeats[seat.toString()]);
 
-        return currentData;
-
-    }, (error, committed) => {
-
-        if(error){
-            console.error(error);
-            alert("Lỗi hệ thống!");
-            return;
-        }
-
-        if(conflict){
-            alert("Ghế vừa bị người khác đặt 😭");
-            return;
-        }
-
-        if(committed){
-
-            let promises = [];
-
-            selected.forEach(seat=>{
-                let p = db.ref("tickets").push({
-                    user: currentUser.uid, // 🔥 FIX
-                    userName: username,
-                    movie: movie,
-                    seat: "Ghế " + seat,
-                    price: (seat%5===0)?100000:70000,
-                    payment: payment,
-                    status: "Đã thanh toán"
-                });
-                promises.push(p);
-            });
-
-            Promise.all(promises).then(()=>{
-                alert("🎉 Đặt vé thành công!");
-
-                selected = [];
-                updateTotal();
-                loadSeats();
-
-                window.location.href = "tickets.html";
-            });
-        }
-
+        updateTotal();
+        render();
     });
 }
-
-// ===== ĐỔI GIỜ =====
 function changeTime(){
     time = document.getElementById("timeSelect").value;
     selected = [];
 
+    document.getElementById("qrBox").style.display = "none";
+
     updateTitle();
     loadSeats();
-}
-function bookTicket(movie, seat, price){
-    let user = firebase.auth().currentUser?.email || "Khách";
-
-    db.ref("tickets").push({
-        user: user,
-        movie: movie,
-        seat: seat,
-        price: price,
-        status: "Chờ xác nhận"
-    });
-
-    alert("Đặt vé thành công!");
 }
 function autoResetSeats(){
 
@@ -420,14 +328,21 @@ function autoResetSeats(){
         // chỉ reset khi quá suất chiếu 2 tiếng
         let diff = now - show;
 
-        if(diff > 2 * 60 * 60 * 1000){
+       if(diff > 2 * 60 * 60 * 1000){
 
-            let ref = db.ref(`seats/${movie}/${today}/${t}`);
+    let safeMovie = movie.replace(/[.#$/[\]]/g, "_");
+    let ref = db.ref(`seats/${safeMovie}/${today}/${t}`);
+
+    ref.once("value", snap=>{
+        let data = snap.val();
+
+        // chỉ xóa nếu KHÔNG có ai đặt
+        if(!data || Object.keys(data).length === 0){
             ref.remove();
-
-            console.log("Reset ghế suất:", t);
-
+            console.log("Reset ghế:", t);
         }
+    });
+}
 
     });
 
@@ -444,11 +359,10 @@ function showQR(){
     let username = document.getElementById("username").value;
     let payment = document.getElementById("payment").value;
 
-    if(!username){
-        alert("Nhập tên!");
-        return;
-    }
-
+   if(!username.trim()){
+    alert("Nhập tên!");
+    return;
+}
     // Nếu tiền mặt thì đặt luôn
     if(payment === "Tiền mặt"){
         book();
@@ -462,14 +376,125 @@ function showQR(){
     document.getElementById("qrBox").style.display = "block";
 }
 function confirmPaid(){
+    const btn = document.querySelector("#qrBox button");
+
+    btn.disabled = true;
+    btn.innerText = "Đang xử lý...";
+
     book();
 }
 // ===== START =====
 updateTitle();
+
+// 🔥 THÊM DÒNG NÀY NGAY ĐÂY
+document.getElementById("timeSelect").value = time;
+
 updateTotal();
-loadSeats();
 autoResetSeats();
+loadSeats();
 setInterval(autoResetSeats,60000);
+function booking(){
+
+    // 🔥 check login chuẩn
+    const user = firebase.auth().currentUser;
+    if(!user){
+        alert("Bạn chưa đăng nhập!");
+        return;
+    }
+
+    if(selected.length === 0){
+        alert("Chọn ghế trước");
+        return;
+    }
+
+    let username = document.getElementById("username").value;
+
+    if(!username.trim()){
+        alert("Nhập tên!");
+        return;
+    }
+
+    let safeMovie = movie.replace(/[.#$/[\]]/g, "_");
+    let currentTime = document.getElementById("timeSelect").value;
+
+    let ref = db.ref("seats/" + safeMovie + "/" + today + "/" + currentTime);
+
+    let seatsToBook = [...selected]; // clone tránh lỗi async
+
+    ref.transaction(current => {
+
+        if(current === null) current = {};
+
+        // 🚫 nếu ghế đã có người đặt → HỦY
+        for(let seat of seatsToBook){
+            if(current[seat] || current[seat.toString()]){
+                return null; // 🔥 bắt buộc
+            }
+        }
+
+        // ✅ tạo data mới
+        let newData = {...current};
+
+        seatsToBook.forEach(seat=>{
+            newData[seat] = {
+                user: user.uid,
+                name: username,
+                time: new Date().toISOString()
+            };
+        });
+
+        return newData;
+
+    }, (error, committed, snapshot) => {
+
+        console.log("ERROR:", error);
+        console.log("COMMITTED:", committed);
+        console.log("DATA:", snapshot?.val());
+
+        if(error){
+            alert("Lỗi hệ thống!");
+            return;
+        }
+
+        if(!committed){
+            alert("Ghế vừa bị người khác đặt!");
+            return;
+        }
+
+        // 🎟 lưu ticket
+        let promises = [];
+
+        seatsToBook.forEach(seat=>{
+            let p = db.ref("tickets").push({
+                user: user.uid,
+                userName: username,
+                movie: movie,
+                seat: seat,
+                time: currentTime,
+                date: today
+            });
+            promises.push(p);
+        });
+
+        Promise.all(promises).then(()=>{
+
+            alert("🎉 Đặt vé thành công!");
+
+            // 🔥 update UI ngay (không cần chờ firebase)
+            seatsToBook.forEach(seat=>{
+                bookedSeats[seat] = true;
+            });
+
+            selected = [];
+            document.getElementById("qrBox").style.display = "none";
+
+            updateTotal();
+            render();
+
+        });
+
+    });
+}
 </script>
 </body>
 </html> 
