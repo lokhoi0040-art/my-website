@@ -132,22 +132,13 @@ input{
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-
+<script src="js/js/firebase-config.js"></script>
 <script>
-const firebaseConfig = {
-    apiKey: "AIzaSyB-tw2lNCrv2AXA5mUP4bkp9vzDpLzXqe4",
-    authDomain: "movie-booking-87997.firebaseapp.com",
-    databaseURL: "https://movie-booking-87997-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "movie-booking-87997",
-};
-firebase.initializeApp(firebaseConfig);
-
-const db = firebase.database();
-
+  const db = window.db;
+const auth = window.auth;
 let currentUser = null;
 
-// LOAD USER
-firebase.auth().onAuthStateChanged(user=>{
+auth.onAuthStateChanged(user => {
     if(user){
         currentUser = user;
 
