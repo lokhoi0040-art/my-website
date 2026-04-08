@@ -1,0 +1,92 @@
+body{  
+    margin:0;
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg,#0f172a,#1e293b);
+    color:white;
+}
+
+/* HEADER */
+.header{
+    padding:20px;
+    text-align:center;
+    font-size:26px;
+    font-weight:bold;
+}
+
+/* BUTTON */
+.back-btn{
+    display:block;
+    margin:0 auto 10px;
+    background:#facc15;
+    border:none;
+    padding:10px 25px;
+    border-radius:8px;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+/* CARD GRID */
+.container{
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px,1fr));
+    gap:20px;
+    padding:20px;
+    max-width:1000px;
+    margin:auto; /* căn giữa */
+}
+
+.card{
+    background: rgba(255,255,255,0.05);
+    padding:20px;
+    border-radius:15px;
+    text-align:center;
+    backdrop-filter: blur(10px);
+}
+
+/* CHART */
+.chart-box{
+    max-width:900px;
+    margin:20px auto; /* căn giữa */
+    padding:20px;
+    background: rgba(255,255,255,0.05);
+    border-radius:15px;
+}
+
+/* TABLE WRAP */
+.table{
+    max-width:900px;
+    margin:20px auto; /* căn giữa */
+    background: rgba(255,255,255,0.05);
+    border-radius:15px;
+    overflow:hidden;
+}
+
+/* TABLE */
+.table table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+/* HEADER TABLE */
+.table th{
+    background:#1e293b;
+    padding:14px;
+    font-weight:600;
+}
+
+/* BODY TABLE */
+.table td{
+    padding:12px;
+    border-top:1px solid rgba(255,255,255,0.1);
+}
+
+/* HOVER ROW */
+.table tr:hover{
+    background: rgba(255,255,255,0.05);
+}
+
+/* CĂN GIỮA TEXT */
+.table th, 
+.table td{
+    text-align:center;
+}

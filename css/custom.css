@@ -5,10 +5,12 @@
     text-align:center;
 }
 
-.normal{background:#ccc;}
-.vip{background:gold;}
-.booked{background:red; color:white;}
-.selected{background:green; color:white;}
+/* tránh trùng */
+.seat-normal{background:#ccc;}
+.seat-vip{background:gold;}
+.seat-booked{background:red; color:white;}
+.seat-selected{background:green; color:white;}
+
 .banner {
     position: relative;
     width: 100%;
@@ -33,4 +35,12 @@
     font-weight: bold;
     border-radius: 6px;
     font-size: 20px;
+}
+
+.preview-img{
+    width:120px;
+    height:160px;
+    object-fit:cover;
+    border-radius:8px;
+    border:2px dashed #ccc;
 }

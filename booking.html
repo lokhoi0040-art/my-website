@@ -7,30 +7,7 @@
 <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
 <link href="css/sb-admin-2.min.css" rel="stylesheet">
 
-<style>
-.seat{
-    padding:10px;
-    border-radius:6px;
-    text-align:center;
-    cursor:pointer;
-    font-weight:bold;
-    transition:0.2s;
-}
-.seat:hover{transform:scale(1.1);}
-
-.normal{background:#dee2e6;}
-.vip{background:gold;}
-.booked{background:#dc3545;color:white;cursor:not-allowed;}
-.selected{background:#28a745;color:white;}
-
-.screen{
-    background:linear-gradient(to right,#ccc,#eee,#ccc);
-    padding:12px;
-    border-radius:8px;
-    margin-bottom:20px;
-    font-weight:bold;
-}
-</style>
+<link href="css/css/booking.css" rel="stylesheet">
 </head>
 
 <body id="page-top">
@@ -182,23 +159,13 @@ Tôi đã thanh toán
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<script src="js/js/firebase-config.js"></script>
 <script>
-// ===== FIREBASE CONFIG =====
-const firebaseConfig = {
-  apiKey: "AIzaSyB-tw2lNCrv2AXA5mUP4bkp9vzDpLzXqe4",
-  authDomain: "movie-booking-87997.firebaseapp.com",
-  databaseURL: "https://movie-booking-87997-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "movie-booking-87997",
-  storageBucket: "movie-booking-87997.firebasestorage.app",
-  messagingSenderId: "490389622658",
-  appId: "1:490389622658:web:6f9da85f9330207e34099b"
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+const db = window.db;
+const auth = window.auth;
 let currentUser = null;
 
-firebase.auth().onAuthStateChanged(user => {
+auth.onAuthStateChanged(user => {
     if(user){
         currentUser = user;
         console.log("✅ Đã đăng nhập:", user.uid);
@@ -212,7 +179,14 @@ let selected = [];
 let bookedSeats = {}; 
 let today = new Date().toISOString().split("T")[0];
 let seatRef = null; 
-// ===== LẤY PARAM =====
+let isBooking = false;
+function normalizeMovieName(name){
+    return name
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, "_")
+        .replace(/[.#$/[\]]/g, "_");
+}
 const params = new URLSearchParams(window.location.search);
 const movieRaw = params.get("movie") || "Đặt vé";
 const movie = decodeURIComponent(movieRaw).trim(); // 🔥 FIX FULL
@@ -276,7 +250,7 @@ function updateTotal(){
 
 function loadSeats(){
 
-    let safeMovie = movie.replace(/[.#$/[\]]/g, "_");
+    let safeMovie = normalizeMovieName(movie);
     const currentTime = document.getElementById("timeSelect").value;
 
     // 🔥 TẮT LISTENER CŨ
@@ -330,19 +304,18 @@ function autoResetSeats(){
 
        if(diff > 2 * 60 * 60 * 1000){
 
-    let safeMovie = movie.replace(/[.#$/[\]]/g, "_");
+    let safeMovie = normalizeMovieName(movie);
     let ref = db.ref(`seats/${safeMovie}/${today}/${t}`);
 
     ref.once("value", snap=>{
         let data = snap.val();
 
-        // chỉ xóa nếu KHÔNG có ai đặt
-        if(!data || Object.keys(data).length === 0){
-            ref.remove();
-            console.log("Reset ghế:", t);
-        }
-    });
-}
+       
+       if(!data || Object.keys(data).length === 0){
+    console.log("Skip reset:", t);
+      }
+      });
+         }
 
     });
 
@@ -393,14 +366,15 @@ updateTotal();
 autoResetSeats();
 loadSeats();
 setInterval(autoResetSeats,60000);
-function booking(){
+function book(){
+     if(isBooking) return; 
+    isBooking = true;
+    const user = currentUser; 
 
-    // 🔥 check login chuẩn
-    const user = firebase.auth().currentUser;
     if(!user){
         alert("Bạn chưa đăng nhập!");
         return;
-    }
+    }  
 
     if(selected.length === 0){
         alert("Chọn ghế trước");
@@ -414,25 +388,23 @@ function booking(){
         return;
     }
 
-    let safeMovie = movie.replace(/[.#$/[\]]/g, "_");
+    let safe_movie = normalizeMovieName(movie);
     let currentTime = document.getElementById("timeSelect").value;
 
-    let ref = db.ref("seats/" + safeMovie + "/" + today + "/" + currentTime);
+    let ref = db.ref("seats/" + safe_movie + "/" + today + "/" + currentTime);
 
-    let seatsToBook = [...selected]; // clone tránh lỗi async
+    let seatsToBook = [...selected];
 
     ref.transaction(current => {
 
         if(current === null) current = {};
 
-        // 🚫 nếu ghế đã có người đặt → HỦY
-        for(let seat of seatsToBook){
-            if(current[seat] || current[seat.toString()]){
-                return null; // 🔥 bắt buộc
-            }
-        }
+       for(let seat of seatsToBook){
+    if(current[seat] || current[seat.toString()]){
+        return null;
+    }
+}
 
-        // ✅ tạo data mới
         let newData = {...current};
 
         seatsToBook.forEach(seat=>{
@@ -447,50 +419,51 @@ function booking(){
 
     }, (error, committed, snapshot) => {
 
-        console.log("ERROR:", error);
-        console.log("COMMITTED:", committed);
-        console.log("DATA:", snapshot?.val());
-
         if(error){
-            alert("Lỗi hệ thống!");
-            return;
-        }
+    isBooking = false;
+    alert("Lỗi hệ thống!");
+    return;
+}
+       if(!committed){
+    isBooking = false;
+    alert("Ghế vừa bị người khác đặt!");
+    return;
+}
 
-        if(!committed){
-            alert("Ghế vừa bị người khác đặt!");
-            return;
-        }
-
-        // 🎟 lưu ticket
         let promises = [];
 
         seatsToBook.forEach(seat=>{
-            let p = db.ref("tickets").push({
-                user: user.uid,
-                userName: username,
-                movie: movie,
-                seat: seat,
-                time: currentTime,
-                date: today
-            });
-            promises.push(p);
+            promises.push(
+                db.ref("tickets").push({
+                    user: user.uid,
+                    userName: username,
+                    movie: movie,
+                    seat: seat,
+                    time: currentTime,
+                    date: today
+                })
+            );
         });
 
-        Promise.all(promises).then(()=>{
+        Promise.all(promises)
+        .then(()=>{
+    alert("🎉 Đặt vé thành công!");
 
-            alert("🎉 Đặt vé thành công!");
+    
+    seatsToBook.forEach(seat=>{
+        bookedSeats[seat] = true;
+    });
 
-            // 🔥 update UI ngay (không cần chờ firebase)
-            seatsToBook.forEach(seat=>{
-                bookedSeats[seat] = true;
-            });
+    selected = [];
+    document.getElementById("qrBox").style.display = "none";
 
-            selected = [];
-            document.getElementById("qrBox").style.display = "none";
+    updateTotal();
+    render();
+    isBooking = false;
+})
 
-            updateTotal();
-            render();
-
+        .catch(err=>{
+            console.error(err);
         });
 
     });

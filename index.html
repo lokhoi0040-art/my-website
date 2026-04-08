@@ -368,12 +368,12 @@
 
     <!-- Nút play -->
     <div class="banner-overlay" id="playBtn">
-        ▶ Xem trailer
+       <i class="fa fa-play" aria-hidden="true"></i>
     </div>
 
 </div>
 
-    <!-- 🔥 CHỈ THÊM CÁI NÀY -->
+    <!--  CHỈ THÊM CÁI NÀY -->
     <div id="contentArea" class="mt-4"></div>
 
 </div>
@@ -385,7 +385,7 @@
 <!-- ===== SCRIPT CHUYỂN TRANG ===== -->
 <script>
 function goBooking(movie){
-    let time = "18:00"; // 🔥 chọn giờ (có thể đổi)
+    let time = "18:00"; // 
     window.location.href = "booking.html?movie=" + encodeURIComponent(movie) + "&time=" + time;
 }
 </script>
@@ -419,7 +419,8 @@ function loadMovies(){
                              style="width:70px;height:90px;object-fit:cover;border-radius:6px;">
                         <div class="ml-3">
                             <h6 class="mb-1 font-weight-bold">${escapeHTML(m.name)}</h6>
-                            <small class="text-muted">📅 ${m.year}</small>
+                            <small class="text-muted">
+                                <i class="fa fa-calendar" aria-hidden="true"></i> ${m.year}</small>
                         </div>
                     </div>
                     <button class="btn btn-warning btn-sm book-btn"
@@ -480,7 +481,7 @@ function addMovie(){
     let desc = document.getElementById("desc").value;
 
     if(!name || !year){
-        alert("Nhập thiếu rồi 😅");
+        alert("Nhập thiếu rồi ");
         return;
     }
 
@@ -496,6 +497,7 @@ function renderMovies(){
             <div class="card mb-2 shadow-sm">
                 <div class="card-body d-flex justify-content-between">
                     <div>
+                        
                         <strong>${escapeHTML(m.name)}</strong>
                         <small>${escapeHTML(m.desc)}</small>
                     </div>
@@ -607,8 +609,6 @@ window.onload = function(){
         playBtn.addEventListener("click", loadVideo);
     }
 }
-
-// ✅ function để ngoài riêng
 function closeSeat(){
     document.getElementById("seatModal").style.display = "none";
 }

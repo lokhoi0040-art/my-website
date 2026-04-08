@@ -13,47 +13,8 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-
-<style>
-body{
-    margin:0;
-    font-family:'Segoe UI',sans-serif;
-    background:#f8fafc;
-    color:#111;
-}
-.header{
-    padding:20px;
-    text-align:center;
-    font-size:24px;
-    font-weight:bold;
-}
-.back-btn{
-    margin-left:20px;
-    background:#2563eb;
-    color:white;
-    border:none;
-    padding:10px 20px;
-    border-radius:8px;
-    font-weight:bold;
-    cursor:pointer;
-}
-.back-btn:hover{
-    background:#1d4ed8;
-}
-.table-box{
-    margin:20px;
-    padding:20px;
-    background:white;
-    border-radius:12px;
-    box-shadow:0 5px 15px rgba(0,0,0,0.1);
-}
-table.dataTable thead{
-    background:#f1f5f9;
-}
-table.dataTable tbody tr:hover{
-    background:#f1f5f9;
-}
-</style>
+<script src="js/js/firebase-config.js"></script>
+ <link href="css/tables.css" rel="stylesheet">
 </head>
 
 <body>
@@ -80,29 +41,19 @@ table.dataTable tbody tr:hover{
 </div>
 
 <script>
-// FIREBASE CONFIG
-const firebaseConfig = {
-  apiKey: "AIzaSyB-tw2lNCrv2AXA5mUP4bkp9vzDpLzXqe4",
-  authDomain: "movie-booking-87997.firebaseapp.com",
-  databaseURL: "https://movie-booking-87997-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "movie-booking-87997",
-  storageBucket: "movie-booking-87997.firebasestorage.app",
-  messagingSenderId: "490389622658",
-  appId: "1:490389622658:web:6f9da85f9330207e34099b"
-};
+const db = window.db;
+const auth = window.auth;
 
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-}
-const db = firebase.database();
+console.log("DB =", db);
+console.log("AUTH =", auth);
+let isAdmin = false;
 
-// 🔒 CHECK LOGIN
-firebase.auth().onAuthStateChanged(user => {
+auth.onAuthStateChanged(user => {
     if(!user){
         alert("Chưa đăng nhập!");
         window.location.href = "login.html";
     } else {
-        loadData(); // 🔥 THÊM DÒNG NÀY
+        loadData(); 
     }
 });
 

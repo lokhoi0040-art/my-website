@@ -7,17 +7,12 @@
 <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
 <link href="css/sb-admin-2.min.css" rel="stylesheet">
 
-<style>
-.card-hover:hover{
-    transform: scale(1.01);
-    transition: 0.2s;
-}
-</style>
+<link href="css/custom.css" rel="stylesheet">
 
-<!-- 🔥 FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<script src="js/js/firebase-config.js"></script>
 
 </head>
 
@@ -62,7 +57,7 @@
 <!-- FORM -->
 <div class="card shadow mb-4 card-hover">
     <div class="card-header bg-primary text-white">
-        ➕ Thêm lịch chiếu
+       <i class="fa fa-plus" aria-hidden="true"></i>
     </div>
 
     <div class="card-body">
@@ -85,7 +80,7 @@
 
             <div class="col-md-2 d-flex align-items-end">
                 <button class="btn btn-success w-100" onclick="addSchedule()">
-                    ➕ Thêm
+                    <i class="fa fa-plus" aria-hidden="true"></i>
                 </button>
             </div>
 
@@ -127,20 +122,14 @@
 
 <!-- ===== SCRIPT ===== -->
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyB-tw2lNCrv2AXA5mUP4bkp9vzDpLzXqe4",
-  authDomain: "movie-booking-87997.firebaseapp.com",
-  databaseURL: "https://movie-booking-87997-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "movie-booking-87997"
-};
+const db = window.db;
+const auth = window.auth;
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-
+console.log("DB =", db);
+console.log("AUTH =", auth);
 let isAdmin = false;
 
-// 🔒 CHECK ROLE
-firebase.auth().onAuthStateChanged(user => {
+auth.onAuthStateChanged(user => {
     if(user){
         db.ref("users/" + user.uid).once("value").then(snap => {
             let data = snap.val();

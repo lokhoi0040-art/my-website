@@ -1,0 +1,25 @@
+.seat{
+    padding:12px;
+    border-radius:6px;
+    text-align:center;
+    cursor:pointer;
+    font-weight:bold;
+}
+
+.normal{
+    background:#dee2e6;
+}
+
+.vip{
+    background:gold;
+}
+
+.selected{
+    background:green;
+    color:white;
+}
+
+.booked{
+    background:red;
+    color:white;
+}

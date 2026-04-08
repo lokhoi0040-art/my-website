@@ -11,16 +11,9 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<script src="js/js/firebase-config.js"></script>
+<link href="css/custom.css" rel="stylesheet">
 
-<style>
-.preview-img{
-    width:120px;
-    height:160px;
-    object-fit:cover;
-    border-radius:8px;
-    border:2px dashed #ccc;
-}
-</style>
 </head>
 
 <body id="page-top">
@@ -86,7 +79,7 @@
 <div id="content">
 
 <nav class="navbar navbar-light bg-white shadow mb-4">
-    <h5 class="ml-3">➕ Thêm phim mới</h5>
+    <h5 class="ml-3"> Thêm phim mới</h5>
 </nav>
 
 <div class="container-fluid">
@@ -142,11 +135,12 @@
 </div>
 
 <button class="btn btn-success" onclick="addMovie()">
-➕ Thêm phim
+ <i class="fa fa-plus" aria-hidden="true"></i>
+ Thêm phim
 </button>
 
 <a href="movies.html" class="btn btn-secondary">
-⬅ Quay lại
+ <i class="fa fa-backward" aria-hidden="true"></i>
 </a>
 
 </div>
@@ -185,20 +179,14 @@
 
 <!-- JS -->
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyB-tw2lNCrv2AXA5mUP4bkp9vzDpLzXqe4",
-  authDomain: "movie-booking-87997.firebaseapp.com",
-  databaseURL: "https://movie-booking-87997-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "movie-booking-87997"
-};
+const db = window.db;
+const auth = window.auth;
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-
+console.log("DB =", db);
+console.log("AUTH =", auth);
 let isAdmin = false;
 
-// 🔥 CHECK LOGIN + ROLE
-firebase.auth().onAuthStateChanged(user => {
+auth.onAuthStateChanged(user => {
     if(user){
         db.ref("users/" + user.uid).once("value").then(snap => {
             let data = snap.val();
